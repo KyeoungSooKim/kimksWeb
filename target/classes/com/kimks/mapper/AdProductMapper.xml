@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kimks.mapper.AdProductMapper">
+
+<select id="mainCategory" resultType="com.kimks.domain.CategoryVO">
+	select cate_code, cate_prt, cate_name from category_tbl where cate_prt is null
+</select>
+
+<select id="subCategory" resultType="com.kimks.domain.CategoryVO">
+	select cate_code, cate_prt, cate_name from category_tbl where cate_prt = #{cate_code}
+</select>
+
+<insert id="insert">
+insert into product_tbl(pdt_code, cate_code, cate_prt, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy)
+values(SEQ_PRODUCT.nextval, #{cate_code}, #{cate_prt}, #{pdt_name}, #{pdt_price}, #{pdt_discount}, #{pdt_company}, #{pdt_detail}, #{pdt_img}, #{pdt_amount}, #{pdt_buy})
+</insert>
+
+	<sql id="criteria">
+      	<trim prefix="(" suffix=") and" prefixOverrides="or">
+      		<foreach item="type" collection="typeArr">
+      			<trim prefix="or">
+      				<choose>
+      					<when test="type=='N'.toString()">
+      						pdt_name like '%'||#{keyword}||'%'
+      					</when>
+      					<when test="type=='D'.toString()">
+      						pdt_detail like '%'||#{keyword}||'%'
+      					</when>
+      					<when test="type=='C'.toString()">
+      						pdt_company like '%'||#{keyword}||'%'
+      					</when>
+      				</choose>
+      			</trim>
+      		</foreach>
+      	</trim>
+      </sql>
+
+<select id="getListWithPaging" resultType="com.kimks.domain.ProductVO">
+	<![CDATA[
+	 select 
+    pdt_code, cate_code, cate_prt, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+  from 
+      (
+      select /*+INDEX_DESC(product_tbl SYS_C005129) */
+        rownum rn, pdt_code, cate_code, cate_prt, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+      from 
+        product_tbl
+      WHERE
+            ]]>
+      
+      <include refid="criteria"></include>
+      
+      <![CDATA[
+       rownum <= #{pageNum} * #{amount}
+      
+      )
+  where rn > (#{pageNum} -1) * #{amount}
+	]]>
+	</select>
+	
+<select id="getTotal" resultType="int">
+select count(*) from product_tbl where <include refid="criteria"></include> pdt_code>0
+</select>
+
+<select id="getProduct" resultType="com.kimks.domain.ProductVO">
+select pdt_code, cate_code, cate_prt, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up from product_tbl where pdt_code=#{pdt_code}
+</select>
+
+<update id="edit">
+update product_tbl set cate_code = #{cate_code}, cate_prt= #{cate_prt}, pdt_name= #{pdt_name}, pdt_price= #{pdt_price}, pdt_discount= #{pdt_discount}, pdt_company= #{pdt_company}, pdt_detail= #{pdt_detail}, pdt_img= #{pdt_img}, pdt_amount= #{pdt_amount}, pdt_buy= #{pdt_buy}, pdt_date_up = sysdate where pdt_code=#{pdt_code}
+</update>
+
+<update id="priceEdit">
+update product_tbl set pdt_price= #{pdt_price}, pdt_discount= #{pdt_discount}, pdt_buy= #{pdt_buy}, pdt_date_up = sysdate where pdt_code=#{pdt_code}
+</update>
+
+<delete id="delete">
+delete from product_tbl where pdt_code=#{pdt_code}
+</delete>
+</mapper>

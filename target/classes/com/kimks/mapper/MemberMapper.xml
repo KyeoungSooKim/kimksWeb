@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kimks.mapper.MemberMapper">
+
+<insert id="join">
+ INSERT INTO MEMBER_TBL(u_id, u_name, u_pw, u_email, u_zipcode, u_addr, u_addr_d, u_phone)
+VALUES(#{u_id}, #{u_name}, #{u_pw}, #{u_email}, #{u_zipcode}, #{u_addr}, #{u_addr_d}, #{u_phone})
+</insert>
+
+<select id="idCheck" resultType="String">
+SELECT u_id FROM MEMBER_TBL WHERE u_id = #{u_id}
+</select>
+
+<select id="login" resultType="com.kimks.domain.MemberVO">
+ SELECT u_id, u_name, u_pw, u_email, u_zipcode, u_addr, u_addr_d, u_phone, u_regdate, u_updatedate
+ FROM MEMBER_TBL WHERE u_id = #{u_id}
+</select>
+
+<update id="modify">
+UPDATE MEMBER_TBL SET u_email=#{u_email}, u_zipcode=#{u_zipcode}, u_addr=#{u_addr}, u_addr_d=#{u_addr_d}, u_phone=#{u_phone}, u_updatedate = SYSDATE WHERE u_id = #{u_id}
+</update>
+
+<delete id="delete">
+DELETE MEMBER_TBL WHERE u_id = #{u_id}
+</delete>
+
+<update id="changePW">
+UPDATE MEMBER_TBL SET u_pw = #{u_pw} WHERE u_id = #{u_id}
+</update>
+
+<update id="keepLogin">
+UPDATE MEMBER_TBL SET u_sessionid = #{u_sessionid}, u_loginlimit = #{u_loginlimit} WHERE u_id = #{u_id}
+</update>
+
+<select id="loginCheckWithSessionId" resultType="com.kimks.domain.MemberVO">
+ SELECT *
+ FROM MEMBER_TBL WHERE u_sessionid = #{u_sessionid} AND u_loginlimit > sysdate
+</select>
+
+	<sql id="criteria">
+      	<trim prefix="(" suffix=") and" prefixOverrides="or">
+      		<foreach item="type" collection="typeArr">
+      			<trim prefix="or">
+      				<choose>
+      					<when test="type=='I'.toString()">
+      						u_id like '%'||#{keyword}||'%'
+      					</when>
+      					<when test="type=='N'.toString()">
+      						u_name like '%'||#{keyword}||'%'
+      					</when>
+      					<when test="type=='A'.toString()">
+      						u_addr like '%'||#{keyword}||'%'
+      					</when>
+      				</choose>
+      			</trim>
+      		</foreach>
+      	</trim>
+      </sql>
+	
+	<select id="getListWithPaging" resultType="com.kimks.domain.MemberVO">
+	<![CDATA[
+	 select 
+    u_id, u_name, u_pw, u_email, u_zipcode, u_addr, u_addr_d, u_phone, u_regdate, u_updatedate
+  from 
+      (
+      select /*+INDEX_DESC(MEMBER_TBL SYS_C005106) */
+        rownum rn, u_id, u_name, u_pw, u_email, u_zipcode, u_addr, u_addr_d, u_phone, u_regdate, u_updatedate
+      from 
+        MEMBER_TBL
+      WHERE
+            ]]>
+      
+      <include refid="criteria"></include>
+      
+      <![CDATA[
+       rownum <= #{pageNum} * #{amount}
+      
+      )
+  where rn > (#{pageNum} -1) * #{amount}
+	]]>
+</select>
+	
+<select id="getTotalCount" resultType="int">
+	select count(*) from MEMBER_TBL where <include refid="criteria"></include> u_id is not null
+</select>
+
+<delete id="deleteByAd">
+DELETE MEMBER_TBL WHERE u_id = #{u_id}
+</delete>
+
+<select id="userInfo" resultType="com.kimks.domain.MemberVO">
+SELECT * FROM MEMBER_TBL WHERE u_id = #{u_id}
+</select>
+
+<update id="modifyByAd">
+UPDATE MEMBER_TBL SET u_name=#{u_name}, u_email=#{u_email}, u_zipcode=#{u_zipcode}, u_addr=#{u_addr}, u_addr_d=#{u_addr_d}, u_phone=#{u_phone}, u_updatedate = SYSDATE WHERE u_id = #{u_id}
+</update>
+
+<select id="findID" resultType="com.kimks.domain.MemberVO">
+SELECT * FROM MEMBER_TBL WHERE u_name=#{u_name} and u_email=#{u_email}
+</select>
+
+<select id="findPW" resultType="com.kimks.domain.MemberVO">
+SELECT * FROM MEMBER_TBL WHERE u_id = #{u_id} and u_email=#{u_email}
+</select>
+
+</mapper>

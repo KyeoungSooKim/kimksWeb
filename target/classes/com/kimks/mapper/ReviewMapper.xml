@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kimks.mapper.ReviewMapper">
+
+	<insert id="write">
+		insert into review_tbl(rv_num, u_id, pdt_code, rv_content, rv_score)
+		values(seq_rv_num.nextval, #{u_id}, #{pdt_code}, #{rv_content}, #{rv_score})
+	</insert>
+	
+	<select id="getListWithPaging" resultType="com.kimks.domain.ReviewVO">
+		 <![CDATA[
+		 select  rn, rv_num, u_id, pdt_code, rv_content, rv_score, rv_regdate
+		 from 
+		    (
+		     select /*+INDEX_DESC(review_tbl SYS_C005157) */ rownum rn, rv_num, u_id, pdt_code, rv_content, rv_score, rv_regdate
+		     from review_tbl
+		     where pdt_code = #{pdt_code}  
+		     and rownum <= #{cri.pageNum} * #{cri.amount}
+		     ) where rn > (#{cri.pageNum} -1) * #{cri.amount}
+		 ]]> 
+	</select>
+	
+	<select id="getCountBypdtcode" resultType="int">
+		select count(rv_num) from review_tbl where pdt_code = #{pdt_code}
+	</select>
+	
+	<update id="rvCheckUpdate">
+	update order_detail_tbl set rv_check = 'Y' where odr_code = #{odr_code} and pdt_code = #{pdt_code}
+	</update>
+</mapper>

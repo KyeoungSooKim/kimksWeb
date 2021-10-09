@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kimks.mapper.BannerMapper">
+
+<select id="getFirstBanner" resultType="com.kimks.domain.BannerVO">
+SELECT bn_code, bn_img, bn_regdate, bn_order FROM(
+SELECT RANK() OVER (ORDER BY bn_order, bn_regdate) rank, bn_code, bn_img, bn_regdate, bn_order FROM BANNER_TBL
+)
+WHERE rank = 1
+</select>
+
+<select id="getBanner" resultType="com.kimks.domain.BannerVO">
+SELECT bn_code, bn_img, bn_regdate, bn_order FROM(
+SELECT RANK() OVER (ORDER BY bn_order, bn_regdate) rank, bn_code, bn_img, bn_regdate, bn_order FROM BANNER_TBL
+)
+WHERE rank != 1
+</select>
+
+<select id="getAll" resultType="com.kimks.domain.BannerVO">
+SELECT bn_code, bn_img, bn_regdate, bn_order FROM BANNER_TBL ORDER BY BN_ORDER
+</select>
+
+<insert id="insert">
+INSERT INTO BANNER_TBL(bn_code, bn_img, bn_order) VALUES(SEQ_BN_CODE.NEXTVAL, #{bn_img}, #{bn_order})
+</insert>
+<select id="getOrder" resultType="int">
+SELECT bn_order FROM(
+SELECT bn_order FROM BANNER_TBL ORDER BY bn_order DESC
+)
+WHERE ROWNUM=1
+</select>
+
+<delete id="delete">
+DELETE FROM BANNER_TBL WHERE bn_code = #{bn_code}
+</delete>
+<update id="updateOrder">
+UPDATE BANNER_TBL SET bn_order = bn_order-1 WHERE bn_order > (SELECT bn_order FROM BANNER_TBL WHERE bn_code = #{bn_code})
+</update>
+
+<update id="modify">
+UPDATE BANNER_TBL SET bn_img=#{bn_img}, bn_order=#{bn_order} WHERE bn_code = #{bn_code}
+</update>
+
+</mapper>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kimks.mapper.OrderMapper">
+
+<select id="getOrderSeq" resultType="Long">
+select seq_odr_code.nextval from dual
+</select>
+
+<insert id="orderAdd">
+INSERT INTO order_tbl(odr_code, u_id, odr_name, odr_zipcode, odr_addr, odr_addr_d, odr_phone, odr_total_price, odr_count)
+values(#{odr_code},#{u_id},#{odr_name},#{odr_zipcode},#{odr_addr},#{odr_addr_d},#{odr_phone},#{odr_total_price}, #{odr_count})
+</insert>
+
+<insert id="orderAddCookie">
+INSERT INTO order_tbl(odr_code, cookie_id, odr_name, odr_zipcode, odr_addr, odr_addr_d, odr_phone, odr_total_price, odr_count)
+values(#{odr_code},#{cookie_id},#{odr_name},#{odr_zipcode},#{odr_addr},#{odr_addr_d},#{odr_phone},#{odr_total_price}, #{odr_count})
+</insert>
+
+<insert id="orderDetailAdd">
+INSERT INTO order_detail_tbl(odr_code, pdt_code, odr_amount, odr_price)
+values(#{odr_code}, #{pdt_code}, #{odr_amount}, #{odr_price})
+</insert>
+
+<select id="orderSearch" resultType="com.kimks.domain.OrderVO">
+select * from order_tbl where odr_code = #{odr_code} and odr_name = #{odr_name}
+</select>
+
+<select id="userOrderInfoWithPaging" resultType="com.kimks.domain.OrderVO">
+	<![CDATA[
+	 select 
+    odr_code, u_id, odr_name, odr_zipcode, odr_addr, odr_addr_d, odr_phone, odr_total_price, odr_date, odr_count, odr_delivery
+  from 
+      (
+      select /*+INDEX_DESC(order_tbl SYS_C005144) */
+        rownum rn, odr_code, u_id, odr_name, odr_zipcode, odr_addr, odr_addr_d, odr_phone, odr_total_price, odr_date, odr_count, odr_delivery 
+      from 
+        order_tbl
+      WHERE
+		u_id = #{u_id} and
+       rownum <= #{cri.pageNum} * #{cri.amount}
+      
+      )
+  where rn > (#{cri.pageNum} -1) * #{cri.amount}
+	]]>
+	</select>
+
+	<select id="getTotalCount" resultType="int">
+		select count(*) from order_tbl where u_id = #{u_id}
+	</select>
+
+<select id="userOrderDetailInfo" resultType="com.kimks.domain.UserOrderDetailInfoVO">
+select od.odr_code, od.pdt_code, od.odr_amount, od.odr_price, od.rv_check, p.pdt_name, p.pdt_img
+from order_detail_tbl od inner join product_tbl p
+on od.pdt_code = p.pdt_code
+where od.odr_code = #{odr_code}
+</select>
+
+</mapper>

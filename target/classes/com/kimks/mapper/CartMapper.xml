@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kimks.mapper.CartMapper">
+<insert id="addCart">
+merge into CART_TBL c
+USING dual
+on (c.u_id = #{u_id} and c.pdt_code = #{pdt_code} or c.cookie_id = #{cookie_id} and c.pdt_code = #{pdt_code})
+when matched then
+   update set cart_amount = c.cart_amount + #{cart_amount}
+when not matched then
+    insert (cart_code, pdt_code, u_id, cookie_id, cart_amount) values(seq_cart_code.nextval, #{pdt_code}, #{u_id}, #{cookie_id}, #{cart_amount})
+</insert>
+
+<select id="cartList" resultType="com.kimks.domain.CartListVO">
+select c.cart_code, c.pdt_code, c.u_id, c.cart_amount, p.pdt_img, p.pdt_name, p.pdt_price, p.pdt_discount, p.pdt_amount
+from CART_TBL c inner join PRODUCT_TBL p
+on c.pdt_code = p.pdt_code
+where u_id = #{u_id}
+</select>
+
+<select id="cartListCookieId" resultType="com.kimks.domain.CartListVO">
+select c.cart_code, c.pdt_code, c.cookie_id, c.cart_amount, p.pdt_img, p.pdt_name, p.pdt_price, p.pdt_discount, p.pdt_amount
+from CART_TBL c inner join PRODUCT_TBL p
+on c.pdt_code = p.pdt_code
+where cookie_id = #{cookie_id}
+</select>
+
+<select id="selectCartList" resultType="com.kimks.domain.CartListVO">
+select c.cart_code, c.pdt_code, c.u_id, c.cart_amount, p.pdt_img, p.pdt_name, p.pdt_price, p.pdt_discount
+from CART_TBL c inner join PRODUCT_TBL p
+on c.pdt_code = p.pdt_code
+where u_id = #{u_id} and cart_code = #{cart_code}
+</select>
+
+<select id="selectCartListCookieId" resultType="com.kimks.domain.CartListVO">
+select c.cart_code, c.pdt_code, c.u_id, c.cart_amount, p.pdt_img, p.pdt_name, p.pdt_price, p.pdt_discount
+from CART_TBL c inner join PRODUCT_TBL p
+on c.pdt_code = p.pdt_code
+where cookie_id = #{cookie_id} and cart_code = #{cart_code}
+</select>
+
+<update id="editAmount">
+update CART_TBL set cart_amount=#{cart_amount} where cart_code=#{cart_code}
+</update>
+
+<delete id="deleteCart">
+delete from CART_TBL where cart_code=#{cart_code}
+</delete>
+
+<delete id="deleteCartByUserId">
+delete from CART_TBL where u_id = #{u_id}
+</delete>
+
+<delete id="deleteCartByCookieId">
+delete from CART_TBL where cookie_id = #{cookie_id}
+</delete>
+</mapper>

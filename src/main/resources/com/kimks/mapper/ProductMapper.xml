@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kimks.mapper.ProductMapper">
+
+<select id="mainCategory" resultType="com.kimks.domain.CategoryVO">
+	select cate_code, cate_prt, cate_name from category_tbl where cate_prt is null
+</select>
+
+<select id="subCategory" resultType="com.kimks.domain.CategoryVO">
+	select cate_code, cate_prt, cate_name from category_tbl where cate_prt = #{cate_code}
+</select>
+
+	<select id="getListWithPaging" resultType="com.kimks.domain.ProductVO">
+	<![CDATA[
+	 select 
+    pdt_code, pdt_name, pdt_amount, pdt_img, pdt_price, pdt_buy, cate_code, pdt_discount, pdt_detail, pdt_company, cate_prt, pdt_date_sub, pdt_date_up
+  from 
+      (
+      select /*+INDEX_DESC(product_tbl SYS_C005129) */
+        rownum rn, pdt_code, pdt_name, pdt_amount, pdt_img, pdt_price, pdt_buy, cate_code, pdt_discount, pdt_detail, pdt_company, cate_prt, pdt_date_sub, pdt_date_up 
+      from 
+        product_tbl
+      WHERE
+		cate_code = #{cate_code} and
+       rownum <= #{cri.pageNum} * #{cri.amount}
+      
+      )
+  where rn > (#{cri.pageNum} -1) * #{cri.amount}
+	]]>
+	</select>
+
+	<select id="getTotalCount" resultType="int">
+		select count(*) from product_tbl where cate_code = #{cate_code}
+	</select>
+	
+	<sql id="criteria">
+      	<trim prefix="(" suffix=") and" prefixOverrides="or">
+      		<foreach item="type" collection="typeArr">
+      			<trim prefix="or">
+      				<choose>
+      					<when test="type=='N'.toString()">
+      						pdt_name like '%'||#{keyword}||'%'
+      					</when>
+      					<when test="type=='D'.toString()">
+      						pdt_detail like '%'||#{keyword}||'%'
+      					</when>
+      					<when test="type=='C'.toString()">
+      						pdt_company like '%'||#{keyword}||'%'
+      					</when>
+      				</choose>
+      			</trim>
+      		</foreach>
+      	</trim>
+      </sql>
+	
+	<select id="findListWithPaging" resultType="com.kimks.domain.ProductVO">
+	<![CDATA[
+	 select 
+    pdt_code, cate_code, cate_prt, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+  from 
+      (
+      select /*+INDEX_DESC(product_tbl SYS_C005129) */
+        rownum rn, pdt_code, cate_code, cate_prt, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+      from 
+        product_tbl
+      WHERE pdt_buy = 'Y' and
+            ]]>
+      
+      <include refid="criteria"></include>
+      
+      <![CDATA[
+       rownum <= #{pageNum} * #{amount}
+      
+      )
+  where rn > (#{pageNum} -1) * #{amount}
+	]]>
+	</select>
+	
+	<select id="findTotal" resultType="int">
+	select count(*) from product_tbl where <include refid="criteria"></include> pdt_code>0 and pdt_buy = 'Y'
+	</select>
+	
+	<select id="getProduct" resultType="com.kimks.domain.ProductVO">
+		select pdt_code, cate_code, cate_prt, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up from product_tbl where pdt_code=#{pdt_code}
+	</select>
+	
+	<select id="mainList" resultType="com.kimks.domain.ProductVO">
+	<![CDATA[
+		select * from
+		(select ROWNUM rn, pdt_code, cate_code, cate_prt, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+		from product_tbl
+		where cate_prt= #{cate_prt} and pdt_buy = 'Y' order by pdt_date_sub desc)
+		where rownum <=4]]>
+	</select>
+</mapper>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kimks.mapper.ExcelMapper">
+
+<select id="getListExel" fetchSize="100" resultType="com.kimks.domain.MemberVO">
+select u_id, u_name, u_pw, u_email, u_zipcode, u_addr, u_addr_d, u_phone, u_regdate, u_updatedate
+  from MEMBER_TBL
+</select>
+</mapper>

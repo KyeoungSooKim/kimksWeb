@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kimks.mapper.AdOrderMapper">
+
+<sql id="criteria">
+      	<trim prefix="(" suffix=") and" prefixOverrides="or">
+      		<foreach item="type" collection="typeArr">
+      			<trim prefix="or">
+      				<choose>
+      					<when test="type=='C'.toString()">
+      						odr_code like '%'||#{keyword}||'%'
+      					</when>
+      					<when test="type=='I'.toString()">
+      						u_id like '%'||#{keyword}||'%'
+      					</when>
+      					<when test="type=='N'.toString()">
+      						odr_name like '%'||#{keyword}||'%'
+      					</when>
+      				</choose>
+      			</trim>
+      		</foreach>
+      	</trim>
+      </sql>
+
+	<select id="orderAllList" resultType="com.kimks.domain.OrderVO">
+	<![CDATA[
+	 select 
+    odr_code, u_id, odr_name, odr_zipcode, odr_addr, odr_addr_d, odr_phone, odr_total_price, odr_date, odr_count, odr_delivery
+  from 
+      (
+      select /*+INDEX_DESC(order_tbl SYS_C005144) */
+        rownum rn, odr_code, u_id, odr_name, odr_zipcode, odr_addr, odr_addr_d, odr_phone, odr_total_price, odr_date, odr_count, odr_delivery 
+      from 
+        order_tbl
+      WHERE
+      ]]>
+      
+      <include refid="criteria"></include>
+      
+      <![CDATA[
+       rownum <= #{pageNum} * #{amount}
+      
+      )
+  where rn > (#{pageNum} -1) * #{amount}
+	]]>
+	</select>
+
+	<select id="getTotalCount" resultType="int">
+	select count(*) from order_tbl where <include refid="criteria"></include> odr_code>0
+	</select>
+	
+	<select id="userOrderDetailInfo" resultType="com.kimks.domain.UserOrderDetailInfoVO">
+	select od.odr_code, od.pdt_code, od.odr_amount, od.odr_price, p.pdt_name, p.pdt_img
+	from order_detail_tbl od inner join product_tbl p
+	on od.pdt_code = p.pdt_code
+	where od.odr_code = #{odr_code}
+	</select>
+	
+	<delete id="orderDelete">
+	delete from order_tbl where odr_code = #{odr_code}
+	</delete>
+	
+	<select id="orderDetailFind" resultType="int">
+	select count(*) from order_detail_tbl where pdt_code = #{pdt_code}
+	</select>
+	
+	<delete id="orderProductDelete">
+	delete from order_detail_tbl where odr_code = #{odr_code} and pdt_code = #{pdt_code}
+	</delete>
+	<update id="orderCountModify">
+	update order_tbl set odr_count = odr_count-1 where odr_code = #{odr_code}
+	</update>
+	
+	<update id="deliveryStateModify">
+	update order_tbl set odr_delivery = #{odr_delivery} where odr_code = #{odr_code}
+	</update>
+</mapper>
